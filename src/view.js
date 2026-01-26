@@ -31,8 +31,7 @@ const { state, actions } = store("outermost/mega-menu", {
 			}
 		},
 		closeMenuOnClick() {
-			actions.closeMenu("click");
-			actions.closeMenu("focus");
+			actions.closeMenu("closeButton");
 		},
 		handleMenuKeydown(event) {
 			if (state.menuOpenedBy.click) {
@@ -91,7 +90,26 @@ const { state, actions } = store("outermost/mega-menu", {
 		},
 		closeMenu(menuClosedOn = "click") {
 			const context = getContext();
-			state.menuOpenedBy[menuClosedOn] = false;
+			const { ref } = getElement();
+
+			// Check if debug mode is enabled
+			const navBlock = ref.closest("nav");
+			const debugMode =
+				navBlock?.getAttribute("data-mega-menu-debug-mode") === "true";
+
+			// If debug mode is on and this is not the close button, ignore
+			if (debugMode && menuClosedOn !== "closeButton") {
+				return;
+			}
+
+			// Clear all open states when close button is clicked
+			if (menuClosedOn === "closeButton") {
+				state.menuOpenedBy.click = false;
+				state.menuOpenedBy.focus = false;
+				state.menuOpenedBy.hover = false;
+			} else {
+				state.menuOpenedBy[menuClosedOn] = false;
+			}
 
 			// Reset the menu reference and button focus when closed.
 			if (!state.isMenuOpen) {

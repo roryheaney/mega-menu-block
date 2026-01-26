@@ -75,6 +75,11 @@ function outermost_mega_menu_add_navigation_hover_attribute($args, $block_type)
 		'default' => false,
 	);
 
+	$args['attributes']['megaMenuDebugMode'] = array(
+		'type' => 'boolean',
+		'default' => false,
+	);
+
 	return $args;
 }
 add_filter('register_block_type_args', 'outermost_mega_menu_add_navigation_hover_attribute', 10, 2);
@@ -100,12 +105,14 @@ function outermost_mega_menu_navigation_render_block($block_content, $block)
 	}
 
 	$hover_enabled = isset($block['attrs']['megaMenuHoverEnabled']) && $block['attrs']['megaMenuHoverEnabled'] ? 'true' : 'false';
+	$debug_mode = isset($block['attrs']['megaMenuDebugMode']) && $block['attrs']['megaMenuDebugMode'] ? 'true' : 'false';
 
-	// Use WordPress HTML API to safely add attribute
+	// Use WordPress HTML API to safely add attributes
 	$processor = new WP_HTML_Tag_Processor($block_content);
 
 	if ($processor->next_tag('nav')) {
 		$processor->set_attribute('data-mega-menu-hover-enabled', $hover_enabled);
+		$processor->set_attribute('data-mega-menu-debug-mode', $debug_mode);
 		return $processor->get_updated_html();
 	}
 

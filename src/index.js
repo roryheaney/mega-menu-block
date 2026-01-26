@@ -77,7 +77,8 @@ const withMegaMenuHoverControl = createHigherOrderComponent((BlockEdit) => {
 		}
 
 		const { attributes, setAttributes } = props;
-		const { megaMenuHoverEnabled = false } = attributes;
+		const { megaMenuHoverEnabled = false, megaMenuDebugMode = false } =
+			attributes;
 
 		return (
 			<>
@@ -92,6 +93,18 @@ const withMegaMenuHoverControl = createHigherOrderComponent((BlockEdit) => {
 							}
 							help={__(
 								"Open mega menus on hover instead of click only.",
+								"mega-menu-block",
+							)}
+							__nextHasNoMarginBottom
+						/>
+						<ToggleControl
+							label={__("Debug mode (prevents auto-close)", "mega-menu-block")}
+							checked={megaMenuDebugMode}
+							onChange={(value) =>
+								setAttributes({ megaMenuDebugMode: value })
+							}
+							help={__(
+								"Keep mega menus open for style inspection. Only closeable via close button.",
 								"mega-menu-block",
 							)}
 							__nextHasNoMarginBottom
