@@ -100,9 +100,7 @@ const withMegaMenuHoverControl = createHigherOrderComponent((BlockEdit) => {
 						<ToggleControl
 							label={__("Debug mode (prevents auto-close)", "mega-menu-block")}
 							checked={megaMenuDebugMode}
-							onChange={(value) =>
-								setAttributes({ megaMenuDebugMode: value })
-							}
+							onChange={(value) => setAttributes({ megaMenuDebugMode: value })}
 							help={__(
 								"Keep mega menus open for style inspection. Only closeable via close button.",
 								"mega-menu-block",

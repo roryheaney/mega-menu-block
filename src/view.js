@@ -3,8 +3,42 @@
  */
 import { store, getContext, getElement } from "@wordpress/interactivity";
 
+// Utility function to convert CSS values (rem, em, %, etc.) to pixels
+function convertCssValueToPixels(cssValue) {
+	if (!cssValue) {
+		return 0;
+	}
+
+	// Create a temporary element
+	const tempElement = document.createElement("div");
+
+	// Apply the CSS value to the temporary element
+	// For example, setting its width to the complex CSS value
+	tempElement.style.width = cssValue;
+
+	// Append the temporary element to the body to make it part of the document
+	document.body.appendChild(tempElement);
+
+	// Use getComputedStyle to get the computed width in pixels
+	const computedWidth = window.getComputedStyle(tempElement).width;
+
+	// Remove the temporary element from the document
+	document.body.removeChild(tempElement);
+
+	// Return the computed width as a number
+	return parseFloat(computedWidth);
+}
+
 const { state, actions } = store("outermost/mega-menu", {
 	state: {
+		// Client-only values for positioning - initialized in initMenuPosition callback
+		windowWidth: 0,
+		rootPaddingLeft: 0,
+		rootPaddingRight: 0,
+		get windowSpace() {
+			// Derived state - pure getter (no side effects)
+			return state.windowWidth - state.rootPaddingLeft - state.rootPaddingRight;
+		},
 		get isMenuOpen() {
 			// The menu is opened if any method is true.
 			return Object.values(state.menuOpenedBy).filter(Boolean).length > 0;
@@ -120,6 +154,88 @@ const { state, actions } = store("outermost/mega-menu", {
 				context.megaMenu = null;
 			}
 		},
+		updateRootPadding() {
+			// Read CSS variables and convert to pixels
+			const bodyStyles = window.getComputedStyle(document.body);
+			const leftValue = bodyStyles
+				.getPropertyValue("--wp--style--root--padding-left")
+				.trim();
+			const rightValue = bodyStyles
+				.getPropertyValue("--wp--style--root--padding-right")
+				.trim();
+
+			state.rootPaddingLeft = convertCssValueToPixels(leftValue);
+			state.rootPaddingRight = convertCssValueToPixels(rightValue);
+		},
+		calculateMenuPosition(menuElement, context) {
+			// Find parent navigation block
+			const navBlock = menuElement.closest(".wp-block-navigation");
+			if (!navBlock) return;
+
+			// Determine justification from CSS classes
+			let justification = "left";
+			if (
+				navBlock.classList.contains("items-justified-center") ||
+				navBlock.classList.contains("items-justified-space-between")
+			) {
+				justification = "center";
+			} else if (navBlock.classList.contains("items-justified-right")) {
+				justification = "right";
+			}
+
+			// Check menu's own justification classes (overrides navigation)
+			if (menuElement.classList.contains("menu-justified-center")) {
+				justification = "center";
+			} else if (menuElement.classList.contains("menu-justified-right")) {
+				justification = "right";
+			} else if (menuElement.classList.contains("menu-justified-left")) {
+				justification = "left"; // Note: TODO says this sets to 'right' - bug?
+			}
+
+			// Calculate positions
+			const windowSpace = state.windowSpace; // Uses derived state
+			const menuWidth = menuElement.offsetWidth;
+			const menuRect = menuElement.getBoundingClientRect();
+			const navBlockRect = navBlock.getBoundingClientRect();
+
+			// Calculate left offset
+			const leftOffset =
+				navBlockRect.left <= state.rootPaddingLeft
+					? state.rootPaddingLeft - navBlockRect.left
+					: navBlockRect.left - state.rootPaddingLeft;
+
+			// Apply positioning logic based on justification
+			if (justification === "center") {
+				const leftSpace = (windowSpace - menuWidth) / 2;
+
+				if (menuWidth > windowSpace) {
+					context.menuWidth = `${windowSpace}px`;
+					context.menuLeft = `-${leftOffset}px`;
+				} else if (menuRect.left > 0 && leftSpace >= menuRect.left) {
+					context.menuWidth = false; // false removes inline style
+					context.menuLeft = false;
+				} else if (leftOffset >= leftSpace) {
+					context.menuWidth = false;
+					context.menuLeft = `-${leftOffset - leftSpace}px`;
+				} else {
+					context.menuWidth = false;
+					context.menuLeft = `${leftSpace - leftOffset}px`;
+				}
+			} else if (justification === "left" || justification === "right") {
+				if (menuWidth > windowSpace) {
+					context.menuWidth = `${windowSpace}px`;
+					context.menuLeft = `${leftOffset}px`;
+				} else {
+					context.menuWidth = false; // false removes inline style
+
+					if (menuRect.left <= 0) {
+						context.menuLeft = `${leftOffset}px`;
+					} else {
+						context.menuLeft = false; // false removes inline style
+					}
+				}
+			}
+		},
 	},
 	callbacks: {
 		initMenu() {
@@ -131,136 +247,37 @@ const { state, actions } = store("outermost/mega-menu", {
 				context.megaMenu = ref;
 			}
 		},
+		initMenuPosition() {
+			// Initialize window dimensions if not already set (first menu only)
+			if (state.windowWidth === 0) {
+				state.windowWidth = window.innerWidth;
+				actions.updateRootPadding(); // CRITICAL: Always initialize padding
+			}
+			// Do NOT calculate position here - let watchWindowChanges handle it
+		},
+		updateWindowDimensions() {
+			// Single handler for window resize - updates global state only
+			state.windowWidth = window.innerWidth;
+			actions.updateRootPadding();
+		},
+		watchWindowChanges() {
+			// Per-menu watcher - handles ALL position calculations (initial + updates)
+			const context = getContext();
+			const { ref } = getElement();
+
+			// Guard against null ref during hydration
+			if (!ref) return;
+
+			// CRITICAL: Read all state dependencies for proper tracking
+			// wp-watch only re-runs when state/context accessed inside this callback changes
+			const width = state.windowWidth;
+			const leftPad = state.rootPaddingLeft;
+			const rightPad = state.rootPaddingRight;
+
+			// Calculate position whenever state changes (including first run)
+			if (width > 0) {
+				actions.calculateMenuPosition(ref, context);
+			}
+		},
 	},
 });
-
-// TODO: Convert all the following to use the Interactivity API.
-// ----------------------------------------------------------------------------------------------- //
-
-// Get the root padding variables.
-const bodyStyles = window.getComputedStyle(document.body);
-const rootPaddingLeft = bodyStyles
-	.getPropertyValue("--wp--style--root--padding-left")
-	.trim();
-const rootPaddingRight = bodyStyles
-	.getPropertyValue("--wp--style--root--padding-right")
-	.trim();
-
-function adjustMegaMenus() {
-	// Convert the CSS variable value to pixels.
-	const rootPaddingLeftValue = convertCssValueToPixels(rootPaddingLeft);
-	const rootPaddingRightValue = convertCssValueToPixels(rootPaddingRight);
-
-	document
-		.querySelectorAll(".wp-block-outermost-mega-menu__menu-container")
-		.forEach((menu) => {
-			const navBlock = menu.closest(".wp-block-navigation");
-			if (!navBlock) return;
-
-			// Determine the justification of the navigation block.
-			let justification = "left";
-
-			if (
-				navBlock.classList.contains("items-justified-center") ||
-				navBlock.classList.contains("items-justified-space-between")
-			) {
-				justification = "center";
-			} else if (navBlock.classList.contains("items-justified-right")) {
-				justification = "right";
-			}
-
-			// TODO: Refactor
-			if (menu.classList.contains("menu-justified-center")) {
-				justification = "center";
-			} else if (menu.classList.contains("menu-justified-right")) {
-				justification = "right";
-			} else if (menu.classList.contains("menu-justified-left")) {
-				justification = "right";
-			}
-
-			// Get the window space and the native width of the mega menu.
-			const windowSpace =
-				window.innerWidth - rootPaddingRightValue - rootPaddingLeftValue;
-			const menuWidth = menu.offsetWidth;
-
-			// Get the bounding rectangle of the navigation block containing the menu.
-			const menuRect = menu.getBoundingClientRect();
-			const navBlockRect = navBlock.getBoundingClientRect();
-
-			// Assumes that the navigation block is always offset by the root padding.
-			const leftOffset =
-				navBlockRect.left <= rootPaddingLeftValue
-					? rootPaddingLeftValue - navBlockRect.left
-					: navBlockRect.left - rootPaddingLeftValue;
-			const leftSpace = (windowSpace - menuWidth) / 2;
-
-			if (justification === "center") {
-				if (menuWidth > windowSpace) {
-					menu.style.width = `${windowSpace}px`;
-					menu.style.left = `-${leftOffset}px`;
-				} else if (menuRect.left > 0 && leftSpace >= menuRect.left) {
-					// Do nothing, the menu is positioned with CSS and it looks fine.
-					menu.style.left = "";
-				} else if (leftOffset >= leftSpace) {
-					// Reset width.
-					menu.style.width = "";
-					menu.style.left = `-${leftOffset - leftSpace}px`;
-				} else {
-					menu.style.width = "";
-					menu.style.left = `${leftSpace - leftOffset}px`;
-				}
-			} else if (justification === "left" || justification === "right") {
-				// The left value doesn't need to change for left and right justifications.
-				if (menuWidth > windowSpace) {
-					menu.style.width = `${windowSpace}px`;
-					menu.style.left = `${leftOffset}px`;
-				} else {
-					menu.style.width = "";
-
-					// Make sure the menu does not extend off the left-side of the screen.
-					if (menuRect.left <= 0) {
-						// TODO: This is not correct when justified right in some scenarios.
-						menu.style.left = `${leftOffset}px`;
-					} else {
-						menu.style.left = "";
-					}
-				}
-			}
-		});
-}
-
-// Adjust mega menu positions on window resize.
-window.addEventListener("resize", adjustMegaMenus);
-
-// // Initial adjustment on page load.
-if (document.readyState === "complete") {
-	adjustMegaMenus();
-} else {
-	window.addEventListener("load", adjustMegaMenus);
-}
-
-// Function to convert a complex CSS value to pixels
-function convertCssValueToPixels(cssValue) {
-	if (!cssValue) {
-		return 0;
-	}
-
-	// Create a temporary element
-	const tempElement = document.createElement("div");
-
-	// Apply the CSS value to the temporary element
-	// For example, setting its width to the complex CSS value
-	tempElement.style.width = cssValue;
-
-	// Append the temporary element to the body to make it part of the document
-	document.body.appendChild(tempElement);
-
-	// Use getComputedStyle to get the computed width in pixels
-	const computedWidth = window.getComputedStyle(tempElement).width;
-
-	// Remove the temporary element from the document
-	document.body.removeChild(tempElement);
-
-	// Return the computed width as a number
-	return parseFloat(computedWidth);
-}
