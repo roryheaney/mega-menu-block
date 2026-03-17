@@ -73,6 +73,11 @@ export default function Edit( { attributes, setAttributes } ) {
 				?.layout
 	);
 
+	const contentSizeLabel =
+		layout?.contentSize || __( 'theme content width', 'mega-menu-block' );
+	const wideSizeLabel =
+		layout?.wideSize || __( 'theme wide width', 'mega-menu-block' );
+
 	// Fetch all template parts.
 	const { hasResolved, records } = useEntityRecords(
 		'postType',
@@ -161,7 +166,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			label: sprintf(
 				// translators: %s: container size (i.e. 600px etc)
 				__( 'Content width (%s wide)', 'mega-menu-block' ),
-				layout.contentSize
+				contentSizeLabel
 			),
 		},
 		{
@@ -170,7 +175,7 @@ export default function Edit( { attributes, setAttributes } ) {
 			label: sprintf(
 				// translators: %s: container size (i.e. 600px etc)
 				__( 'Wide width (%s wide)', 'mega-menu-block' ),
-				layout.wideSize
+				wideSizeLabel
 			),
 		},
 		{
@@ -215,7 +220,7 @@ export default function Edit( { attributes, setAttributes } ) {
 								),
 								{
 									a: (
-									<a // eslint-disable-line
+										<a // eslint-disable-line
 											href={ menuTemplateUrl }
 											target="_blank"
 											rel="noreferrer"
@@ -290,7 +295,7 @@ export default function Edit( { attributes, setAttributes } ) {
 								} );
 							} }
 							help={ __(
-								'When the navigtion menu is collapsed, link to this URL instead.',
+								'When the navigation menu is collapsed, link to this URL instead.',
 								'mega-menu-block'
 							) }
 							autoComplete="off"
@@ -319,13 +324,13 @@ export default function Edit( { attributes, setAttributes } ) {
 							__nextHasNoMarginBottom
 						>
 							{ justificationOptions.map(
-								( { value, icon, iconLabel } ) => {
+								( { value, icon, label: optionLabel } ) => {
 									return (
 										<ToggleGroupControlOptionIcon
 											key={ value }
 											value={ value }
 											icon={ icon }
-											label={ iconLabel }
+											label={ optionLabel }
 										/>
 									);
 								}
@@ -344,13 +349,13 @@ export default function Edit( { attributes, setAttributes } ) {
 							__next40pxDefaultSize
 						>
 							{ widthOptions.map(
-								( { value, icon, iconLabel } ) => {
+								( { value, icon, label: optionLabel } ) => {
 									return (
 										<ToggleGroupControlOptionIcon
 											key={ value }
 											value={ value }
 											icon={ icon }
-											label={ iconLabel }
+											label={ optionLabel }
 										/>
 									);
 								}

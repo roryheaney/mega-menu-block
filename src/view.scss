@@ -42,10 +42,10 @@
 		right: 12px;
 		text-align: center;
 		top: 12px;
-		transition: opacity .2s ease;
+		transition: opacity 0.2s ease;
 		z-index: 100;
 
-		// Show the close button when focused (for keyboard navigation)
+		// Show the close button when focused (for keyboard navigation).
 		&:focus {
 			opacity: 1;
 		}
@@ -53,8 +53,9 @@
 
 	// Show the close button when the mega menu is hovered.
 	&:hover {
+
 		.menu-container__close-button {
-			opacity: 0;
+			opacity: 1;
 		}
 	}
 
@@ -62,38 +63,17 @@
 		transition-delay: 0s, 0s;
 	}
 
-	// This ensures navigation menu inside of mega menus display correctly.
+	// This ensures navigation menus inside mega menus display correctly.
 	.is-responsive {
 		display: flex;
 	}
 }
 
-// Change the position of the menu depending on navigation alignment.
+// Change the position of the menu depending on navigation/menu alignment.
 .wp-block-navigation {
-	&.items-justified-right {
-		.wp-block-outermost-mega-menu__menu-container {
-		  left: unset;
-		  right: -1px;
-		}
-	}
 
-	&.items-justified-center,
-	&.items-justified-space-between {
-		.wp-block-outermost-mega-menu__menu-container {
-			&.menu-width-content {
-				left: calc( ( -1 * var(--wp--style--global--content-size) / 2 ) + 50% );
-			}
-
-			&.menu-width-wide {
-				left: calc( ( -1 * var(--wp--style--global--wide-size) / 2 ) + 50% );
-			}
-		}
-	 }
-}
-
-// Change the position of the menu depending on the menu alignment (override Navigation block).
-.wp-block-navigation {
 	.wp-block-outermost-mega-menu__menu-container {
+
 		&.menu-justified-left {
 			left: -1px;
 			right: unset;
@@ -108,12 +88,42 @@
 			right: unset;
 
 			&.menu-width-content {
-				left: calc( ( -1 * var(--wp--style--global--content-size) / 2 ) + 50% );
+				left: calc((-1 * var(--wp--style--global--content-size) / 2) + 50%);
 			}
 
 			&.menu-width-wide {
-				left: calc( ( -1 * var(--wp--style--global--wide-size) / 2 ) + 50% );
+				left: calc((-1 * var(--wp--style--global--wide-size) / 2) + 50%);
 			}
+		}
+	}
+
+	&.items-justified-right {
+
+		.wp-block-outermost-mega-menu__menu-container {
+			left: unset;
+			right: -1px;
+		}
+	}
+
+	&.items-justified-center,
+	&.items-justified-space-between {
+
+		.wp-block-outermost-mega-menu__menu-container {
+
+			&.menu-width-content {
+				left: calc((-1 * var(--wp--style--global--content-size) / 2) + 50%);
+			}
+
+			&.menu-width-wide {
+				left: calc((-1 * var(--wp--style--global--wide-size) / 2) + 50%);
+			}
+		}
+	}
+
+	&[data-mega-menu-debug-mode="true"] {
+
+		.menu-container__close-button {
+			opacity: 1;
 		}
 	}
 }
@@ -125,8 +135,11 @@
 
 // If a navigation modal is open, check if the mega menu should be displayed.
 html.has-modal-open {
+
 	.wp-block-outermost-mega-menu {
+
 		&.disable-menu-when-collapsed {
+
 			&:not(.has-collapsed-link) {
 				display: none;
 			}
@@ -140,25 +153,24 @@ html.has-modal-open {
 				display: none;
 			}
 		}
+
 		&:not(.disable-menu-when-collapsed) {
-			.wp-block-outermost-mega-menu__toggle {
-				&[aria-expanded=true] {
-					&~.wp-block-outermost-mega-menu__menu-container {
-						height: auto;
-					}
-				}
-			}
+
 			.wp-block-outermost-mega-menu__menu-container {
 				height: 0;
-				width: auto !important;
+				left: unset !important;
 				max-width: 100%;
 				position: relative;
 				top: unset !important;
-				left: unset !important;
+				width: auto !important;
 
 				.wp-block-group-is-layout-flex {
 					flex-direction: column;
 				}
+			}
+
+			.wp-block-outermost-mega-menu__toggle[aria-expanded="true"] ~ .wp-block-outermost-mega-menu__menu-container {
+				height: auto;
 			}
 		}
 	}

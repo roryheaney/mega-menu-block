@@ -6,9 +6,7 @@
 	"title": "Mega Menu",
 	"category": "design",
 	"description": "Add a mega menu to your navigation.",
-	"parent": [
-		"core/navigation"
-	],
+	"parent": [ "core/navigation" ],
 	"example": {},
 	"attributes": {
 		"label": {
@@ -28,7 +26,8 @@
 			"default": ""
 		},
 		"disableWhenCollapsed": {
-			"type": "boolean"
+			"type": "boolean",
+			"default": false
 		},
 		"collapsedUrl": {
 			"type": "string",

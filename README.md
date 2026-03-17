@@ -1,19 +1,28 @@
 # Mega Menu Block
 
-This plugin registers an **experimental** Mega Menu block.
+This plugin registers an experimental Mega Menu block for `core/navigation`.
 
-You can [test the block in your browser](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/ndiego/mega-menu-block/main/_playground/blueprint.json) using Playground. Try adding the Menu Menu block to a Navigation block and configure a menu template in the Settings Sidebar.
+## What It Includes
+
+- Dynamic mega menu block (`outermost/mega-menu`) rendered via PHP.
+- Interactivity API-powered open/close behavior and responsive positioning.
+- Custom `menu` template part area for composing mega menu content in Site Editor.
+- Navigation-level controls for hover-open mode and debug mode.
+- Accessibility-oriented toggle/panel wiring (`aria-expanded`, `aria-controls`, `aria-hidden`, keyboard Escape close).
 
 ## Requirements
 
 - WordPress 6.5+
 - PHP 7.0+
 
-## Limitations
+## Notes
 
-This block is experimental, so there are a few limitations, and you will likely run into some oddities on the front end. It's recommended that you use this plugin as a starting point and adapt it to your theme.
+- Use with block themes.
+- Vertical Navigation layouts are not currently supported.
+- Menu widths are `content`, `wide`, or `full`.
 
-- You must be using a block theme. (e.g., Twenty Twenty-Four)
-- There is no support for vertically positioned Navigation blocks.
-- The width of each mega menu is restricted to either full width or `content` and `wide` width as defined in theme.json.
-- Menu template parts are created in the Site Editor. There is no UI in the Navigation block itself.
+## Development
+
+- `npm run start` for development builds
+- `npm run build` for production assets
+- `npm run lint:js:src` and `npm run lint:css` for linting

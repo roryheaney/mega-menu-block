@@ -1,20 +1,20 @@
 /**
  * WordPress dependencies
  */
-import { registerBlockType } from "@wordpress/blocks";
-import { addFilter } from "@wordpress/hooks";
-import { InspectorControls } from "@wordpress/block-editor";
-import { PanelBody, ToggleControl } from "@wordpress/components";
-import { createHigherOrderComponent } from "@wordpress/compose";
-import { __ } from "@wordpress/i18n";
+import { registerBlockType } from '@wordpress/blocks';
+import { addFilter } from '@wordpress/hooks';
+import { InspectorControls } from '@wordpress/block-editor';
+import { PanelBody, ToggleControl } from '@wordpress/components';
+import { createHigherOrderComponent } from '@wordpress/compose';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
-import "./style.scss";
-import "./view.scss";
-import Edit from "./edit";
-import metadata from "./block.json";
+import './style.scss';
+import './view.scss';
+import Edit from './edit';
+import metadata from './block.json';
 
 const megaMenuIcon = (
 	<svg
@@ -33,10 +33,10 @@ const megaMenuIcon = (
  *
  * @see https://developer.wordpress.org/block-editor/developers/block-api/#registering-a-block
  */
-registerBlockType(metadata.name, {
+registerBlockType( metadata.name, {
 	icon: megaMenuIcon,
 	edit: Edit,
-});
+} );
 
 /**
  * Make the Mega Menu Block available to Navigation blocks.
@@ -47,22 +47,25 @@ registerBlockType(metadata.name, {
  * @param {string} blockName     The name of the block being modified.
  * @return {Object} The modified settings for the Navigation block or the original settings for other blocks.
  */
-const addToNavigation = (blockSettings, blockName) => {
-	if (blockName === "core/navigation") {
-		return {
-			...blockSettings,
-			allowedBlocks: [
-				...(blockSettings.allowedBlocks ?? []),
-				"outermost/mega-menu",
-			],
-		};
+const addToNavigation = ( blockSettings, blockName ) => {
+	if ( blockName !== 'core/navigation' ) {
+		return blockSettings;
 	}
-	return blockSettings;
+
+	const allowedBlocks = blockSettings.allowedBlocks ?? [];
+	if ( allowedBlocks.includes( 'outermost/mega-menu' ) ) {
+		return blockSettings;
+	}
+
+	return {
+		...blockSettings,
+		allowedBlocks: [ ...allowedBlocks, 'outermost/mega-menu' ],
+	};
 };
 addFilter(
-	"blocks.registerBlockType",
-	"outermost-mega-menu-add-to-navigation",
-	addToNavigation,
+	'blocks.registerBlockType',
+	'outermost-mega-menu-add-to-navigation',
+	addToNavigation
 );
 
 /**
@@ -70,10 +73,10 @@ addFilter(
  *
  * @since 0.1.0
  */
-const withMegaMenuHoverControl = createHigherOrderComponent((BlockEdit) => {
-	return (props) => {
-		if (props.name !== "core/navigation") {
-			return <BlockEdit {...props} />;
+const withMegaMenuHoverControl = createHigherOrderComponent( ( BlockEdit ) => {
+	return ( props ) => {
+		if ( props.name !== 'core/navigation' ) {
+			return <BlockEdit { ...props } />;
 		}
 
 		const { attributes, setAttributes } = props;
@@ -82,29 +85,39 @@ const withMegaMenuHoverControl = createHigherOrderComponent((BlockEdit) => {
 
 		return (
 			<>
-				<BlockEdit {...props} />
+				<BlockEdit { ...props } />
 				<InspectorControls>
-					<PanelBody title={__("Mega Menu Settings", "mega-menu-block")}>
+					<PanelBody
+						title={ __( 'Mega Menu Settings', 'mega-menu-block' ) }
+					>
 						<ToggleControl
-							label={__("Enable hover for mega menus", "mega-menu-block")}
-							checked={megaMenuHoverEnabled}
-							onChange={(value) =>
-								setAttributes({ megaMenuHoverEnabled: value })
+							label={ __(
+								'Enable hover for mega menus',
+								'mega-menu-block'
+							) }
+							checked={ megaMenuHoverEnabled }
+							onChange={ ( value ) =>
+								setAttributes( { megaMenuHoverEnabled: value } )
 							}
-							help={__(
-								"Open mega menus on hover instead of click only.",
-								"mega-menu-block",
-							)}
+							help={ __(
+								'Open mega menus on hover instead of click only.',
+								'mega-menu-block'
+							) }
 							__nextHasNoMarginBottom
 						/>
 						<ToggleControl
-							label={__("Debug mode (prevents auto-close)", "mega-menu-block")}
-							checked={megaMenuDebugMode}
-							onChange={(value) => setAttributes({ megaMenuDebugMode: value })}
-							help={__(
-								"Keep mega menus open for style inspection. Only closeable via close button.",
-								"mega-menu-block",
-							)}
+							label={ __(
+								'Debug mode (prevents auto-close)',
+								'mega-menu-block'
+							) }
+							checked={ megaMenuDebugMode }
+							onChange={ ( value ) =>
+								setAttributes( { megaMenuDebugMode: value } )
+							}
+							help={ __(
+								'Keep mega menus open for style inspection. Only closeable via close button.',
+								'mega-menu-block'
+							) }
 							__nextHasNoMarginBottom
 						/>
 					</PanelBody>
@@ -112,10 +125,10 @@ const withMegaMenuHoverControl = createHigherOrderComponent((BlockEdit) => {
 			</>
 		);
 	};
-}, "withMegaMenuHoverControl");
+}, 'withMegaMenuHoverControl' );
 
 addFilter(
-	"editor.BlockEdit",
-	"outermost/mega-menu-hover-control",
-	withMegaMenuHoverControl,
+	'editor.BlockEdit',
+	'outermost/mega-menu-hover-control',
+	withMegaMenuHoverControl
 );
