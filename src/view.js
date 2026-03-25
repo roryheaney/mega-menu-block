@@ -1,7 +1,12 @@
 /**
  * WordPress dependencies
  */
-import { store, getContext, getElement } from '@wordpress/interactivity';
+import {
+	store,
+	getContext,
+	getElement,
+	withSyncEvent,
+} from '@wordpress/interactivity';
 
 // Utility function to convert CSS values (rem, em, %, etc.) to pixels
 function convertCssValueToPixels( cssValue ) {
@@ -72,12 +77,12 @@ const { state, actions } = store( 'outermost/mega-menu', {
 		closeMenuOnClick() {
 			actions.closeMenu( 'closeButton' );
 		},
-		handleMenuKeydown( event ) {
+		handleMenuKeydown: withSyncEvent( ( event ) => {
 			if ( state.isMenuOpen && event?.key === 'Escape' ) {
 				event.preventDefault();
 				actions.closeMenu( 'closeButton' );
 			}
-		},
+		} ),
 		handleMenuFocusout( event ) {
 			const context = getContext();
 			const menuContainer = context.megaMenu?.querySelector(

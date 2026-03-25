@@ -78,7 +78,7 @@ if ( function_exists( 'block_template_part' ) ) {
 	data-wp-on--keydown="actions.handleMenuKeydown"
 	data-wp-on--mouseover="actions.handleMenuMouseover"
 	data-wp-on--mouseleave="actions.handleMenuMouseleave"
-	data-wp-on-async-window--resize="callbacks.updateWindowDimensions"
+	data-wp-on-window--resize="callbacks.updateWindowDimensions"
 	data-wp-watch="callbacks.initMenu"
 >
 	<button
